@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
@@ -20,7 +20,7 @@ def basic_info() -> tuple[int, list[str]]:
     return rows, column_names
 
 
-def col_info() -> list[tuple[str, any]]:
+def col_info() -> list[tuple[str, Any]]:
     schema: Schema = tbl.schema
     return list(zip(schema.names, schema.types, strict=False))
 

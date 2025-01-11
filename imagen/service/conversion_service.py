@@ -66,7 +66,7 @@ def copy_image_to_images_folder(im: Path) -> Path:
     return new_image
 
 
-def convert_webp_to_png(im: Path, new_image: Path):
+def convert_webp_to_png(im: Path, new_image: Path) -> None:
     """Convert a WebP image to PNG format."""
     with Image.open(im) as img:
         # Convert the image to PNG and save it

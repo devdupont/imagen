@@ -1,7 +1,7 @@
 from enum import StrEnum
 
 import streamlit as st
-from streamlit_option_menu import option_menu
+from streamlit_option_menu import option_menu  # type: ignore
 
 
 class Page(StrEnum):
@@ -27,7 +27,7 @@ pages = {
 page_list = list(pages.keys())
 
 
-def nav(current_page=page_list[0]):
+def nav(current_page: Page = Page.HOME) -> None:
     with st.sidebar:
         p = option_menu(
             "Main Menu",

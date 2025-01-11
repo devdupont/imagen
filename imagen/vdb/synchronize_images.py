@@ -2,7 +2,7 @@ from imagen.config import cfg
 from imagen.vdb.lancedb_persistence import tbl
 
 
-def cleanup_image_folder():
+def cleanup_image_folder() -> None:
     for file in cfg.image_storage_folder.glob("*"):
         res = tbl.search().where(f"image_name = '{file.name}'", prefilter=True).to_list()
         if len(res) == 0:

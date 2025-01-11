@@ -20,15 +20,10 @@ async def generate_image(prompt: str, number_of_images: int = 1, size: Sizes = S
         model=cfg.openai_image_model,
         prompt=prompt,
         n=number_of_images,  # Number of images to generate
-        size=size,  # Size of the generated image,
+        size=size.value,  # Size of the generated image,
         response_format="url",
     )
-    urls = [image.url for image in response.data]
-    downloaded_images = []
-    for url in urls:
-        if downloaded_image := await download_image_from_url(url):
-            downloaded_images.append(downloaded_image)
-    return downloaded_images
+    return [d for image in response.data if image.url and (d := await download_image_from_url(image.url))]
 
 
 if __name__ == "__main__":

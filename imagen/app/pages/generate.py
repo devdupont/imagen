@@ -2,7 +2,7 @@ import asyncio
 
 import streamlit as st
 
-from imagen.app.navbar import nav
+from imagen.app.navbar import Page, nav
 from imagen.app.pages.common import display_image, missing_prompt_error, save_image
 from imagen.service.openai_image_generation import Sizes, generate_image
 
@@ -10,7 +10,7 @@ st.set_page_config(layout="wide")
 st.header("Image Generation")
 
 # Display the menu
-nav("Generate")
+nav(Page.GENERATE)
 
 st.markdown("Here you can generate images using DALL-E and save them directly in the vector database.")
 

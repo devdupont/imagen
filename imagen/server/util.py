@@ -1,12 +1,12 @@
-""""""
+"""Utility functions for the server."""
 
 from pathlib import Path
-from tempfile import NamedTemporaryFile
+from tempfile import _TemporaryFileWrapper
 
 from fastapi import UploadFile
 
 
-async def create_temp_file(file: UploadFile, tmp: NamedTemporaryFile) -> Path:
+async def api_tempfile(file: UploadFile, tmp: _TemporaryFileWrapper) -> Path:
     """Create a temporary file from an uploaded file."""
     content = await file.read()  # Read the file content
     tmp.write(content)  # Write the file content to a temporary file

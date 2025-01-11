@@ -4,8 +4,8 @@ from tempfile import NamedTemporaryFile
 
 import streamlit as st
 
-from imagen.app.navbar import nav
-from imagen.app.tmp_file_helper import create_temp_file
+from imagen.app.navbar import Page, nav
+from imagen.app.util import app_tempfile
 from imagen.config import cfg
 from imagen.log import logger
 from imagen.model.error import Error
@@ -17,7 +17,7 @@ st.set_page_config(layout="wide")
 st.header("Image Upload")
 
 # Display the menu
-nav("Upload")
+nav(Page.UPLOAD)
 
 st.markdown("""This page allows you to upload an image to the vector database.""")
 
@@ -37,7 +37,7 @@ if submit_button:
         with NamedTemporaryFile(delete=False) as tmp:
             output = None
             with st.spinner("Uploading file... Please wait."):
-                tmp_path = create_temp_file(uploaded_file, tmp)
+                tmp_path = app_tempfile(uploaded_file, tmp)
                 formatted_timestamp = generate_file_timestamp()
                 file_copy = tmp_path.parent / f"{formatted_timestamp}_{uploaded_file.name}"
                 logger.info("file_copy %s", file_copy)

@@ -1,13 +1,13 @@
 import streamlit as st
 
-from imagen.app.navbar import nav
+from imagen.app.navbar import Page, nav
 from imagen.vdb.lancedb_info import basic_info, col_info
 
 st.set_page_config(layout="wide")
 st.header("Database stats")
 
 # Display the menu
-nav("Stats")
+nav(Page.STATS)
 
 count, _ = basic_info()
 column_info = col_info()

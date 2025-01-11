@@ -3,9 +3,10 @@ from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING
 
 import streamlit as st
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
-from imagen.app.navbar import nav
-from imagen.app.tmp_file_helper import create_temp_file
+from imagen.app.navbar import Page, nav
+from imagen.app.util import app_tempfile
 from imagen.config import cfg
 from imagen.vdb.image_search_helper import image_search
 from imagen.vdb.imagedb_schema import (
@@ -17,6 +18,7 @@ from imagen.vdb.text_search import text_search
 
 if TYPE_CHECKING:
     from pathlib import Path
+
 
 LIMIT = 10
 
@@ -35,11 +37,9 @@ def search_response_adapter(res: list[dict]) -> None:
                 st.markdown(f"Distance: {r['_distance']}")
 
 
-def streamlit_image_search(
-    # file: st.runtime.uploaded_file_manager.UploadedFile,
-) -> list[dict]:
+def streamlit_image_search(file: UploadedFile) -> list[dict]:
     with NamedTemporaryFile(delete=False) as tmp:
-        tmp_path = create_temp_file(uploaded_file, tmp)
+        tmp_path = app_tempfile(file, tmp)
         return image_search(tmp_path, LIMIT)
 
 
@@ -47,7 +47,7 @@ st.set_page_config(layout="wide")
 st.header("Image Vector Search")
 
 # Display the menu
-nav("Home")
+nav(Page.HOME)
 
 st.markdown(
     """This form allows you to search foro images based on an **uploaded image** or some **descriptive text**. You can also combine text and images to search the image you are looking for."""
@@ -65,15 +65,14 @@ with st.form(key="file_search_form"):
 
 if submit_button:
     # Check if either the file is uploaded or the text area is filled
-    has_uploaded_file = uploaded_file is not None
-    if has_uploaded_file or search_expression:
+    if uploaded_file or search_expression:
         with st.spinner("Uploading file... Please wait."):
-            if has_uploaded_file and search_expression and len(search_expression) > 1:
+            if uploaded_file and search_expression and len(search_expression) > 1:
                 # Mixed search
                 res_image = streamlit_image_search(uploaded_file)
                 res_text = asyncio.run(text_search(search_expression, LIMIT))
                 search_response_adapter(combine_results(res_image, res_text, LIMIT // 2))
-            elif has_uploaded_file:
+            elif uploaded_file:
                 # File based search
                 res = streamlit_image_search(uploaded_file)
                 search_response_adapter(res)

@@ -41,7 +41,12 @@ class Config(BaseSettings):
     image_vector_size: int = 768
     text_vector_size: int = 768
 
-    supported_file_formats: tuple[str] = ("png", "jpg", "jpeg", "webp",)
+    supported_file_formats: tuple[str] = (
+        "png",
+        "jpg",
+        "jpeg",
+        "webp",
+    )
 
     testing: bool = False
 
