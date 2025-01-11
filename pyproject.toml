@@ -1,0 +1,88 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "imagen"
+dynamic = ["version"]
+description = "Image search project"
+readme = "README.md"
+requires-python = "<=3.13,>=3.10"
+license = "MIT"
+authors = [
+    { name = "Gil Fernandes", email = "gil.fernandes@onepointltd.com" },
+    { name = "Michael duPont", email = "michael@dupont.dev" },
+]
+dependencies = [
+    "aiofiles~=24.1.0",
+    "aiohttp~=3.11.11",
+    "clip-retrieval~=2.44.0",
+    "fastapi~=0.115.6",
+    "lancedb~=0.17.0",
+    "openai>=1.58.1",
+    "pydantic-settings~=2.7.0",
+    "python-dotenv~=1.0.1",
+    "python-multipart~=0.0.20",
+    "streamlit-option-menu~=0.4.0",
+    "streamlit>=1.41.1",
+    "torch~=2.5.1",
+]
+
+[tool.hatch.version]
+path = "imagen/__about__.py"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+    "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:imagen}"
+
+[tool.hatch.envs.serve]
+extra-dependencies = [
+    "uvicorn~=0.34.0",
+]
+
+[tool.hatch.envs.serve.scripts]
+start = "uvicorn imagen.server.main:app --port {args:8888}"
+reload = "uvicorn imagen.server.main:app --reload --port {args:8888}"
+
+[tool.hatch.envs.app.scripts]
+start = "streamlit run imagen/app/home.py"
+
+[tool.hatch.envs.hatch-test]
+extra-dependencies = [
+    "asgi-lifespan",
+    "pytest-asyncio>=0.23.7",
+    "pytest-cov",
+]
+
+[tool.coverage.report]
+# fail_under = 50  # increase over time
+exclude_lines = [
+    "no cov",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+[tool.mypy]
+disallow_any_unimported = false
+disallow_untyped_defs = true
+no_implicit_optional = true
+strict_equality = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+check_untyped_defs = true
+show_error_codes = true
+
+[tool.ruff]
+lint.ignore = [
+    "D105",
+    "D203",
+    "D213",
+    "PLR2004", # Magic variable. Consider slowly re-enabling
+    "N818",
+    "T201", # print statement
+    "S101", # Use of assert detected
+]
