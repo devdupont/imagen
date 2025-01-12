@@ -1,15 +1,13 @@
 import asyncio
 import shutil
-from tempfile import NamedTemporaryFile
 
 import streamlit as st
 
 from imagen.app.navbar import Page, nav
-from imagen.app.util import app_tempfile
 from imagen.config import cfg
 from imagen.log import logger
 from imagen.model.error import Error
-from imagen.utils.file_utils import unlink_file
+from imagen.utils.file_utils import get_temp_file
 from imagen.utils.time_utils import generate_file_timestamp
 from imagen.vdb.lancedb_persistence import save_image_from_path
 
@@ -33,15 +31,12 @@ if submit_button:
         # Display a message prompting the user to fill out the upload file
         st.error("Please upload an image")
     else:
-        tmp_path = None
-        with NamedTemporaryFile(delete=False) as tmp:
+        with st.spinner("Uploading file... Please wait."):
             output = None
-            with st.spinner("Uploading file... Please wait."):
-                tmp_path = app_tempfile(uploaded_file, tmp)
-                formatted_timestamp = generate_file_timestamp()
-                file_copy = tmp_path.parent / f"{formatted_timestamp}_{uploaded_file.name}"
+            with get_temp_file(uploaded_file.getbuffer()) as tmp:
+                file_copy = tmp.parent / f"{generate_file_timestamp()}_{uploaded_file.name}"
                 logger.info("file_copy %s", file_copy)
-                shutil.copyfile(tmp_path, file_copy)
+                shutil.copyfile(tmp, file_copy)
                 logger.info("file_copy exists %s", file_copy.exists())
                 output = asyncio.run(save_image_from_path(file_copy))
 
@@ -49,5 +44,3 @@ if submit_button:
                 st.error(f"Image upload failed due to {output.message}")
             else:
                 st.info(f"Image {uploaded_file.name} successfully {'created' if output else 'updated'}")
-
-        unlink_file(tmp_path)

@@ -1,13 +1,12 @@
 import asyncio
-from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING
 
 import streamlit as st
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 from imagen.app.navbar import Page, nav
-from imagen.app.util import app_tempfile
 from imagen.config import cfg
+from imagen.utils.file_utils import get_temp_file
 from imagen.vdb.image_search_helper import image_search
 from imagen.vdb.imagedb_schema import (
     FIELD_IMAGE_DESCRIPTION,
@@ -38,9 +37,8 @@ def search_response_adapter(res: list[dict]) -> None:
 
 
 def streamlit_image_search(file: UploadedFile) -> list[dict]:
-    with NamedTemporaryFile(delete=False) as tmp:
-        tmp_path = app_tempfile(file, tmp)
-        return image_search(tmp_path, LIMIT)
+    with get_temp_file(file.getbuffer(), delete=False) as tmp:
+        return image_search(tmp, LIMIT)
 
 
 st.set_page_config(layout="wide")
