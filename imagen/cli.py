@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
-from imagen.config import get_image_folder
+from imagen.config import cfg
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -17,7 +17,7 @@ app = typer.Typer()
 async def init(
     path: Annotated[
         Path,
-        typer.Option(default_factory=get_image_folder, exists=True, help="Can supply a non-default image location"),
+        typer.Option(cfg.image_load_path, exists=True, help="Can supply a non-default image location"),
     ],
 ) -> None:
     """Initialize the database."""
@@ -62,10 +62,9 @@ def export() -> None:
 @app.command()
 def clean() -> None:
     """Cleanup images and database."""
-    from imagen.vdb.synchronize_images import cleanup_db, cleanup_image_folder
+    from imagen.vdb.synchronize_images import syncronize_db
 
-    cleanup_image_folder()
-    cleanup_db()
+    syncronize_db()
 
 
 if __name__ == "__main__":

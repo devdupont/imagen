@@ -1,8 +1,8 @@
 from imagen.vdb.imagedb_schema import FIELD_IMAGE_NAME
 
 
-def combine_results(res_image: list[dict], res_text: list[dict], limit: int):
-    def rank_results(res: list[dict]):
+def combine_results(res_image: list[dict], res_text: list[dict], limit: int) -> list[dict]:
+    def rank_results(res: list[dict]) -> dict[str, dict]:
         return {r[FIELD_IMAGE_NAME]: {**r, "rank_points": limit - i} for i, r in enumerate(res)}
 
     ranked_images = rank_results(res_image)

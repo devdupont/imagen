@@ -13,6 +13,13 @@ from imagen.vdb.imagedb_schema import (
 )
 from imagen.vdb.lancedb_persistence import tbl
 
+INFO_FIELDS = [
+    FIELD_IMAGE_NAME,
+    FIELD_IMAGE_DESCRIPTION,
+    FIELD_CREATE_TIMESTAMP,
+    FIELD_UPDATE_TIMESTAMP,
+]
+
 
 def basic_info() -> tuple[int, list[str]]:
     rows = tbl.count_rows()
@@ -26,19 +33,9 @@ def col_info() -> list[tuple[str, Any]]:
 
 
 def get_data() -> pd.DataFrame:
-    return (
-        tbl.search()
-        .limit(-1)  # Fetches all records.
-        .select(
-            [
-                FIELD_IMAGE_NAME,
-                FIELD_IMAGE_DESCRIPTION,
-                FIELD_CREATE_TIMESTAMP,
-                FIELD_UPDATE_TIMESTAMP,
-            ]
-        )
-        .to_pandas()
-    )
+    # Limit -1 fetches all records
+    df: pd.DataFrame = tbl.search().limit(-1).select(INFO_FIELDS).to_pandas()
+    return df
 
 
 if __name__ == "__main__":

@@ -41,7 +41,7 @@ def convert_to_pyarrow(image_data: ImageData, create_timestamp: int | None) -> p
     elements.append(pa.array([current_timestamp]))
 
     return pa.Table.from_arrays(
-        elements,
+        elements,  # type: ignore
         [
             FIELD_IMAGE_VECTOR,
             FIELD_TEXT_VECTOR,

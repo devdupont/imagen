@@ -14,17 +14,16 @@ def image_search(image_path: Path, limit: int = 10, distance: str = DISTANCE.EUC
 
 
 if __name__ == "__main__":
-    from imagen.config import get_image_folder
+    from imagen.config import cfg
 
-    def search_tester(image_path: Path):
+    def search_tester(image_path: Path) -> None:
         print("Searching for: ", image_path)
         res = image_search(image_path, 3, DISTANCE.DOT)
         for dic in res:
             print(dic[FIELD_IMAGE_NAME])
             print("\n******************************************\n")
 
-    images_path = get_image_folder()
-    image_list = list(images_path.glob("*.png"))
+    image_list = list(cfg.image_load_path.glob("*.png"))
     if len(image_list) > 0:
         first_image = image_list[0]
         print(f"== {first_image} ==")

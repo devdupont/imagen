@@ -13,13 +13,11 @@ cfg.testing = True
 cfg.lance_table_image += "_test"
 
 from imagen.server.main import app  # noqa: E402
-from imagen.vdb.synchronize_images import cleanup_db, cleanup_image_folder  # noqa: E402
 
 
 async def clear_database() -> None:
     """Empty the test database."""
-    cleanup_image_folder()
-    cleanup_db()
+    # delete temp database here
 
 
 @pytest_asyncio.fixture()

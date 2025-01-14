@@ -25,13 +25,16 @@ def default_dir(path_str: str) -> Callable[[], Path]:
 class Config(BaseSettings):
     """Configuration object for the project."""
 
-    image_storage_folder: DirectoryPath = Field(default_factory=default_dir("./tmp/images"))
+    # Where imagen will store uploaded images
+    image_path: DirectoryPath = Field(default_factory=default_dir("./tmp/images"))
+    # Where imagen will look to load test images
+    image_load_path: DirectoryPath = Field(default_factory=default_dir("./tests/data/images"))
 
     openai_api_key: str = ""
     openai_embeddings_model: str | None = None
     openai_image_model: str = "clip-vit-base"
 
-    ollama_base_url: HttpUrl = "http://localhost:11434/api"
+    ollama_base_url: HttpUrl = "http://localhost:11434/api"  # type: ignore
     llava_model: str = "llava"
     nomic_embed_model: str = "nomic-embed-text"
 
@@ -41,7 +44,7 @@ class Config(BaseSettings):
     image_vector_size: int = 768
     text_vector_size: int = 768
 
-    supported_file_formats: tuple[str] = (
+    supported_file_formats: tuple[str, ...] = (
         "png",
         "jpg",
         "jpeg",
@@ -63,18 +66,6 @@ class Config(BaseSettings):
             msg = "OpenAI API key is not set"
             raise ValidationError(msg)
         return self
-
-
-def get_image_folder() -> Path:
-    import sys
-
-    images_path = Path("./images")
-    if not images_path.exists():
-        images_path = Path("./multimodal_experiments/images")
-        if not images_path.exists():
-            print("Cannot find the images", file=sys.stderr)
-            sys.exit(1)
-    return images_path
 
 
 cfg = Config()

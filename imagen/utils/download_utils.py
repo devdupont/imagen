@@ -20,7 +20,7 @@ async def download_image(url: str, image_name: str) -> Path | None:
         if response.status == 200:
             # Read the content of the response
             content = await response.read()
-            filepath = cfg.image_storage_folder / image_name
+            filepath = cfg.image_path / image_name
             # Open a file in binary write mode and save the content to it
             async with aiofiles.open(filepath, "wb") as file:
                 await file.write(content)

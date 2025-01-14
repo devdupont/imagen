@@ -24,7 +24,7 @@ LIMIT = 10
 
 def search_response_adapter(res: list[dict]) -> None:
     for r in res:
-        image_file: Path = cfg.image_storage_folder / r[FIELD_IMAGE_NAME]
+        image_file: Path = cfg.image_path / r[FIELD_IMAGE_NAME]
         if image_file.exists():
             st.image(
                 image_file.as_posix(),

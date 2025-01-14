@@ -54,7 +54,7 @@ def copy_image_to_images_folder(im: Path) -> Path:
     translation_table = str.maketrans(",+;", "   ")
     replaced_string = image_name.translate(translation_table)
 
-    new_image = cfg.image_storage_folder / replaced_string
+    new_image = cfg.image_path / replaced_string
 
     if new_image.suffix == ".webp":
         new_image = new_image.parent / f"{new_image.stem}.png"
@@ -74,12 +74,15 @@ def convert_webp_to_png(im: Path, new_image: Path) -> None:
 
 
 if __name__ == "__main__":
-    from imagen.config import get_image_folder
+    import asyncio as aio
+
+    from imagen.config import cfg
     from imagen.model.image_data import convert_to_pyarrow
 
-    images_path = get_image_folder()
+    async def test_convert() -> None:
+        async for image_data in create_image_embeddings(cfg.image_load_path):
+            res = convert_to_pyarrow(image_data, False)
+            print(type(res))
+            break
 
-    for image_data in create_image_embeddings(images_path):
-        res = convert_to_pyarrow(image_data, False)
-        print(type(res))
-        break
+    aio.run(test_convert())

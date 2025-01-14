@@ -30,7 +30,7 @@ async def create_upload_file(file: UploadFile = File(...)) -> UploadResponse:  #
 async def get_image(image_name: str) -> FileResponse:
     """Get an image by name."""
     # Define the path to the image folder
-    image_path = cfg.image_storage_folder / image_name
+    image_path = cfg.image_path / image_name
 
     # Check if the image exists
     if not image_path.exists():

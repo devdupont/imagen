@@ -1,7 +1,7 @@
 from enum import StrEnum
 from pathlib import Path
 
-import lancedb
+import lancedb  # type: ignore
 import numpy as np
 
 from imagen.config import cfg
@@ -35,12 +35,13 @@ def execute_knn_search(
     limit: int = 10,
     distance: str = DISTANCE.EUCLIDEAN,
 ) -> list[dict]:
-    return (
+    data: list[dict] = (
         tbl.search(embedding, query_type="vector", vector_column_name=vector_column_name)
         .metric(distance)
         .limit(limit)
         .to_list()
     )
+    return data
 
 
 def init_image_vector_table() -> lancedb.table.LanceTable:
@@ -90,7 +91,7 @@ def save_image(image_data: ImageData, *, ignore_update: bool = False) -> bool:
         filter_expression = f"{FIELD_IMAGE_NAME} = '{first_result[FIELD_IMAGE_NAME]}'"
         if image_data.image_path:
             # The file was uploaded again. Keep the old file to avoid dups.
-            unlink_file(cfg.image_storage_folder / image_data.file_name)
+            unlink_file(cfg.image_path / image_data.file_name)
         tbl.update(where=filter_expression, values=single_value)
     return False
 
