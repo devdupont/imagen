@@ -18,7 +18,7 @@ If you just want to run the project on its own, you don't need to worry about in
 
 There are two groups of models currently impplemented: local and remote. The project needs an OpenAI API token in the environment (export or .env) to function. ## docs here
 
-For local models, this project uses [Ollama]() as the host. Once installed, run these commands to download and serve the models.
+For local models, this project uses [Ollama](https://ollama.com) as the host. Once installed, run these commands to download and serve the models.
 
 ```bash
 ollama pull llava:latest
@@ -54,3 +54,6 @@ hatch test
 
 ## CLI
 
+```bash
+hatch run db init
+```

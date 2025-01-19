@@ -44,17 +44,15 @@ def execute_knn_search(
     return data
 
 
-def init_image_vector_table() -> lancedb.table.LanceTable:
+def get_vdb_table() -> lancedb.table.LanceTable:
     db = lancedb.connect(cfg.lance_db_location)
-    table_name = cfg.lance_table_image
     try:
-        return db.open_table(table_name)
+        return db.open_table(cfg.lance_table_image)
     except FileNotFoundError:
-        logger.warning("Could not open database. It does not exist.")
-        return db.create_table(table_name, schema=schema)
+        return db.create_table(cfg.lance_table_image, schema=schema)
 
 
-tbl = init_image_vector_table()
+tbl = get_vdb_table()
 
 
 def sql_escape(text: str) -> str:

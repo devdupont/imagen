@@ -1,11 +1,14 @@
 """Command line interface for the database."""
 
+import asyncio as aio
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
 import typer
 
 from imagen.config import cfg
+from imagen.log import logger
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -14,30 +17,34 @@ app = typer.Typer()
 
 
 @app.command()
-async def init(
+def init(
     path: Annotated[
         Path,
-        typer.Option(cfg.image_load_path, exists=True, help="Can supply a non-default image location"),
-    ],
+        typer.Option(exists=True, help="Can supply a non-default image location"),
+    ] = cfg.image_load_path,
 ) -> None:
     """Initialize the database."""
     from imagen.service.conversion_service import create_image_embeddings
     from imagen.vdb.lancedb_persistence import save_image, tbl
 
-    async for image_data in create_image_embeddings(path):
-        save_image(image_data)
-        print("Saved", image_data.file_name)
+    async def load_images() -> None:
+        async for image_data in create_image_embeddings(path):
+            if image_data is None:
+                logger.error("Could not process any images")
+                return
+            save_image(image_data)
 
+    aio.run(load_images())
     print(f"Table {tbl} has {tbl.count_rows()} rows.")
 
 
 @app.command()
-async def add(path: Annotated[Path, typer.Option(exists=True, help="Image path to add")]) -> None:
+def add(path: Annotated[Path, typer.Option(exists=True, help="Image path to add")]) -> None:
     """Add an image to the database."""
     from imagen.vdb.lancedb_persistence import save_image_from_path
 
     print("Processing", path)
-    await save_image_from_path(path)
+    aio.run(save_image_from_path(path))
 
 
 @app.command()
@@ -50,13 +57,23 @@ def count() -> None:
     print("Columns", names)
 
 
+class FileFormats(StrEnum):
+    """Supported file formats."""
+
+    CSV = "csv"
+    JSON = "json"
+
+
 @app.command()
-def export() -> None:
+def export(fmt: Annotated[FileFormats, typer.Option(help="Output file format")] = FileFormats.JSON) -> None:
     """Export image data to CSV."""
     from imagen.vdb.lancedb_persistence import tbl
 
     df: pd.DataFrame = tbl.to_pandas()
-    df.to_csv("images_data.csv")
+    if fmt == FileFormats.CSV:
+        df.to_csv("image_data.csv")
+    else:
+        df.to_json("image_data.json")
 
 
 @app.command()
@@ -68,4 +85,4 @@ def clean() -> None:
 
 
 if __name__ == "__main__":
-    typer.run(app)
+    app()

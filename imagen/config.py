@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Self
 
 from dotenv import load_dotenv
-from pydantic import DirectoryPath, Field, HttpUrl, ValidationError, model_validator
+from pydantic import DirectoryPath, Field, HttpUrl, model_validator
 from pydantic_settings import BaseSettings
 
 load_dotenv()
@@ -64,7 +64,7 @@ class Config(BaseSettings):
         """Check if the OpenAI API key is set."""
         if not self.openai_api_key or "<" in self.openai_api_key:
             msg = "OpenAI API key is not set"
-            raise ValidationError(msg)
+            raise ValueError(msg)
         return self
 
 
