@@ -5,7 +5,7 @@ from typing import Self
 from pydantic import BaseModel, Field
 
 from imagen.model.error import Error
-from imagen.vdb.imagedb_schema import FIELD_IMAGE_DESCRIPTION, FIELD_IMAGE_NAME
+from imagen.model.image import Image
 
 
 class SearchRequest(BaseModel):
@@ -24,19 +24,19 @@ class SearchResponse(BaseModel):
     distance: float = Field(..., description="The distance to the search query")
 
     @classmethod
-    def from_search(cls, search: dict) -> Self:
-        """Convert search results to SearchResponse objects."""
+    def from_image(cls, image: Image) -> Self:
+        """Convert image objects to SearchResponse objects."""
         return cls(
-            name=search[FIELD_IMAGE_NAME],
-            description=search[FIELD_IMAGE_DESCRIPTION],
-            url=f"/image/{search[FIELD_IMAGE_NAME]}",
-            distance=search["_distance"],
+            name=image.name,
+            description=image.description,
+            url=f"/image/{image.name}",
+            distance=image.distance,
         )
 
     @classmethod
-    def from_searches(cls, searches: list[dict]) -> list["SearchResponse"]:
+    def from_images(cls, images: list[Image]) -> list["SearchResponse"]:
         """Convert search results to SearchResponse objects."""
-        return [cls.from_search(search) for search in searches]
+        return [cls.from_image(image) for image in images]
 
 
 class UploadResponse(BaseModel):

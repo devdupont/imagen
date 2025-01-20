@@ -25,7 +25,7 @@ def init(
 ) -> None:
     """Initialize the database."""
     from imagen.service.conversion_service import create_image_embeddings
-    from imagen.vdb.lancedb_persistence import save_image, tbl
+    from imagen.vdb.lancedb_persistence import TBL, save_image
 
     async def load_images() -> None:
         async for image_data in create_image_embeddings(path):
@@ -35,7 +35,7 @@ def init(
             save_image(image_data)
 
     aio.run(load_images())
-    print(f"Table {tbl} has {tbl.count_rows()} rows.")
+    print(f"Table {TBL} has {TBL.count_rows()} rows.")
 
 
 @app.command()
@@ -67,9 +67,9 @@ class FileFormats(StrEnum):
 @app.command()
 def export(fmt: Annotated[FileFormats, typer.Option(help="Output file format")] = FileFormats.JSON) -> None:
     """Export image data to CSV."""
-    from imagen.vdb.lancedb_persistence import tbl
+    from imagen.vdb.lancedb_persistence import TBL
 
-    df: pd.DataFrame = tbl.to_pandas()
+    df: pd.DataFrame = TBL.to_pandas()
     if fmt == FileFormats.CSV:
         df.to_csv("image_data.csv")
     else:

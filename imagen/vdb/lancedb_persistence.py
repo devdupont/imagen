@@ -2,25 +2,21 @@ from enum import StrEnum
 from pathlib import Path
 
 import lancedb  # type: ignore
-import numpy as np
 
 from imagen.config import cfg
 from imagen.log import logger
 from imagen.model.error import Error, ErrorCode
-from imagen.model.image_data import ImageData, convert_to_pyarrow
+from imagen.model.image import Image
 from imagen.service.conversion_service import (
     convert_single_image,
 )
 from imagen.utils.file_utils import unlink_file
-from imagen.vdb.imagedb_schema import (
-    FIELD_CREATE_TIMESTAMP,
-    FIELD_IMAGE_DESCRIPTION,
-    FIELD_IMAGE_NAME,
-    FIELD_IMAGE_VECTOR,
-    FIELD_TEXT_VECTOR,
-    FIELD_UPDATE_TIMESTAMP,
-    schema,
-)
+
+DB = lancedb.connect(cfg.lance_db_location)
+try:
+    TBL = DB.open_table(cfg.lance_table_image)
+except FileNotFoundError:
+    TBL = DB.create_table(cfg.lance_table_image, schema=Image.schema)
 
 
 class DISTANCE(StrEnum):
@@ -34,25 +30,14 @@ def execute_knn_search(
     vector_column_name: str,
     limit: int = 10,
     distance: str = DISTANCE.EUCLIDEAN,
-) -> list[dict]:
+) -> list[Image]:
     data: list[dict] = (
-        tbl.search(embedding, query_type="vector", vector_column_name=vector_column_name)
+        TBL.search(embedding, query_type="vector", vector_column_name=vector_column_name)
         .metric(distance)
         .limit(limit)
         .to_list()
     )
-    return data
-
-
-def get_vdb_table() -> lancedb.table.LanceTable:
-    db = lancedb.connect(cfg.lance_db_location)
-    try:
-        return db.open_table(cfg.lance_table_image)
-    except FileNotFoundError:
-        return db.create_table(cfg.lance_table_image, schema=schema)
-
-
-tbl = get_vdb_table()
+    return [Image.from_vdb(d) for d in data]
 
 
 def sql_escape(text: str) -> str:
@@ -63,34 +48,34 @@ def convert_vec_to_literal(float_list: list[float]) -> list[str]:
     return [str(v) for v in float_list]
 
 
-def save_image(image_data: ImageData, *, ignore_update: bool = False) -> bool:
-    results = execute_knn_search(image_data.image_embedding, FIELD_IMAGE_VECTOR, 1)
-    image_available = False
-    if len(results) > 0:
-        first_result = results[0]
-        image_available = np.array_equal(first_result[FIELD_IMAGE_VECTOR], image_data.image_embedding)
-    if not image_available:  # insert
-        logger.info("Creating %s", image_data.file_name)
-        pa_table = convert_to_pyarrow(image_data, None)
-        tbl.add(pa_table)
-        return True
-    logger.info("Updating %s", image_data.file_name)
-    first_result = results[0]
-    if not ignore_update:
-        create_timestamp = first_result[FIELD_CREATE_TIMESTAMP]
-        pa_table = convert_to_pyarrow(image_data, create_timestamp)
+def get_first_result(image: Image) -> Image | None:
+    """Get the first result from the database."""
+    try:
+        return execute_knn_search(image.image_embedding, image.field.image_vector, 1)[0]
+    except IndexError:
+        return None
 
+
+def save_image(image: Image, *, ignore_update: bool = False) -> bool:
+    result = get_first_result(image)
+    image_available = image.matching_vector(result) if result else False
+    if not image_available:  # insert
+        logger.info("Creating %s", image.name)
+        TBL.add(image.to_pyarrow())
+        return True
+    logger.info("Updating %s", image.name)
+    if result and not ignore_update:
         single_value = {
-            FIELD_TEXT_VECTOR: convert_vec_to_literal(first_result[FIELD_TEXT_VECTOR]),
-            FIELD_IMAGE_DESCRIPTION: sql_escape(first_result[FIELD_IMAGE_DESCRIPTION]),
-            FIELD_IMAGE_VECTOR: convert_vec_to_literal(first_result[FIELD_IMAGE_VECTOR]),
-            FIELD_UPDATE_TIMESTAMP: first_result[FIELD_UPDATE_TIMESTAMP],
+            image.field.text_vector: convert_vec_to_literal(result.text_embedding),
+            image.field.description: sql_escape(result.description),
+            image.field.image_vector: convert_vec_to_literal(result.image_embedding),
+            image.field.updated: result.updated,
         }
-        filter_expression = f"{FIELD_IMAGE_NAME} = '{first_result[FIELD_IMAGE_NAME]}'"
-        if image_data.image_path:
+        filter_expression = f"{image.field.name} = '{result.name}'"
+        if image.image_path:
             # The file was uploaded again. Keep the old file to avoid dups.
-            unlink_file(cfg.image_path / image_data.file_name)
-        tbl.update(where=filter_expression, values=single_value)
+            unlink_file(cfg.image_path / image.name)
+        TBL.update(where=filter_expression, values=single_value)
     return False
 
 

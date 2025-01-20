@@ -9,21 +9,23 @@ from imagen.log import logger
 
 
 async def download_image_from_url(url: str) -> Path | None:
+    """Download an image from a URL."""
     parsed = urlparse(url)
-    image_name = parsed.path.split("/")[-1]
-    return await download_image(url, image_name)
+    name = parsed.path.split("/")[-1]
+    return await download_image(url, name)
 
 
-async def download_image(url: str, image_name: str) -> Path | None:
+async def download_image(url: str, name: str) -> Path | None:
+    """Download an image from a URL."""
     async with aiohttp.ClientSession() as session, session.get(url) as response:
         # Ensure the request was successful
         if response.status == 200:
             # Read the content of the response
             content = await response.read()
-            filepath = cfg.image_path / image_name
+            path = cfg.image_path / name
             # Open a file in binary write mode and save the content to it
-            async with aiofiles.open(filepath, "wb") as file:
+            async with aiofiles.open(path, "wb") as file:
                 await file.write(content)
-            return filepath
+            return path
         logger.error(f"Failed to download image. Status code: {response.status}")
         return None

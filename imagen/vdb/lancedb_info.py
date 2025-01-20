@@ -5,36 +5,24 @@ import pandas as pd
 if TYPE_CHECKING:
     from pyarrow.lib import Schema
 
-from imagen.vdb.imagedb_schema import (
-    FIELD_CREATE_TIMESTAMP,
-    FIELD_IMAGE_DESCRIPTION,
-    FIELD_IMAGE_NAME,
-    FIELD_UPDATE_TIMESTAMP,
-)
-from imagen.vdb.lancedb_persistence import tbl
-
-INFO_FIELDS = [
-    FIELD_IMAGE_NAME,
-    FIELD_IMAGE_DESCRIPTION,
-    FIELD_CREATE_TIMESTAMP,
-    FIELD_UPDATE_TIMESTAMP,
-]
+from imagen.model.image import FIELD
+from imagen.vdb.lancedb_persistence import TBL
 
 
 def basic_info() -> tuple[int, list[str]]:
-    rows = tbl.count_rows()
-    column_names = tbl.schema.names
+    rows = TBL.count_rows()
+    column_names = TBL.schema.names
     return rows, column_names
 
 
 def col_info() -> list[tuple[str, Any]]:
-    schema: Schema = tbl.schema
+    schema: Schema = TBL.schema
     return list(zip(schema.names, schema.types, strict=False))
 
 
 def get_data() -> pd.DataFrame:
     # Limit -1 fetches all records
-    df: pd.DataFrame = tbl.search().limit(-1).select(INFO_FIELDS).to_pandas()
+    df: pd.DataFrame = TBL.search().limit(-1).select(FIELD.info).to_pandas()
     return df
 
 

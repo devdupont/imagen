@@ -3,25 +3,25 @@ import uuid
 from collections.abc import AsyncIterator
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image as PILImage
 
 from imagen.config import cfg
 from imagen.log import logger
 from imagen.model.error import Error, ErrorCode
-from imagen.model.image_data import ImageData
+from imagen.model.image import Image
 from imagen.service.image_embeddings.embedding_query import get_image_emb
 from imagen.service.llava_client import describe
 from imagen.service.text_embedding_service import create_text_embeddings
 
 
-async def create_image_embeddings(images_path: Path, glob_expression: str = "*.png") -> AsyncIterator[ImageData]:
+async def create_image_embeddings(images_path: Path, glob_expression: str = "*.png") -> AsyncIterator[Image]:
     if not images_path.exists():
         return
     for im in images_path.glob(glob_expression):
         yield await convert_single_image(im)
 
 
-async def convert_single_image(im: Path) -> ImageData | None:
+async def convert_single_image(im: Path) -> Image | None:
     logger.info(f""" ===== {im.as_posix()} =====""")
     logger.info(f"Image exists: {im.exists()}")
 
@@ -38,24 +38,21 @@ async def convert_single_image(im: Path) -> ImageData | None:
     if description is not None and type(description) is not Error:
         image_embedding = get_image_emb(im)
         embedding = await create_text_embeddings(description)
-        return ImageData(new_image_path.name, description, image_embedding, embedding, new_image_path)
+        return Image(new_image_path.name, description, image_embedding, embedding, new_image_path)
     return None
+
+
+NAME_LIMIT = 100
+NAME_TRANS = str.maketrans(",+;", "   ")
 
 
 def copy_image_to_images_folder(im: Path) -> Path:
     """Copy an image to the image storage folder."""
     logger.info("Original image name: %s", im)
-    prefix = str(uuid.uuid4())
-    image_name = f"{prefix}_{im.name}"
-
-    image_name_limit = 100
-    if len(im.stem) > image_name_limit:
-        image_name = f"{im.stem[:image_name_limit]}{im.suffix}"
-    translation_table = str.maketrans(",+;", "   ")
-    replaced_string = image_name.translate(translation_table)
-
-    new_image = cfg.image_path / replaced_string
-
+    name = f"{uuid.uuid4()}_{im.name}"
+    if len(im.stem) > NAME_LIMIT:
+        name = f"{im.stem[:NAME_LIMIT]}{im.suffix}"
+    new_image: Path = cfg.image_path / name.translate(NAME_TRANS)
     if new_image.suffix == ".webp":
         new_image = new_image.parent / f"{new_image.stem}.png"
         logger.info("New image name: %s", new_image)
@@ -68,7 +65,7 @@ def copy_image_to_images_folder(im: Path) -> Path:
 
 def convert_webp_to_png(im: Path, new_image: Path) -> None:
     """Convert a WebP image to PNG format."""
-    with Image.open(im) as img:
+    with PILImage.open(im) as img:
         # Convert the image to PNG and save it
         img.save(new_image, "PNG")
 
@@ -77,11 +74,10 @@ if __name__ == "__main__":
     import asyncio as aio
 
     from imagen.config import cfg
-    from imagen.model.image_data import convert_to_pyarrow
 
     async def test_convert() -> None:
-        async for image_data in create_image_embeddings(cfg.image_load_path):
-            res = convert_to_pyarrow(image_data, False)
+        async for image in create_image_embeddings(cfg.image_load_path):
+            res = image.to_pyarrow()
             print(type(res))
             break
 

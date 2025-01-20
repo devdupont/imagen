@@ -1,4 +1,4 @@
-import asyncio
+import asyncio as aio
 from typing import TYPE_CHECKING
 
 import streamlit as st
@@ -6,13 +6,10 @@ from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 from imagen.app.navbar import Page, nav
 from imagen.config import cfg
+from imagen.model.image import Image
+from imagen.utils.combine import combine_results
 from imagen.utils.file_utils import get_temp_file
 from imagen.vdb.image_search_helper import image_search
-from imagen.vdb.imagedb_schema import (
-    FIELD_IMAGE_DESCRIPTION,
-    FIELD_IMAGE_NAME,
-)
-from imagen.vdb.result_combiner import combine_results
 from imagen.vdb.text_search import text_search
 
 if TYPE_CHECKING:
@@ -22,21 +19,21 @@ if TYPE_CHECKING:
 LIMIT = 10
 
 
-def search_response_adapter(res: list[dict]) -> None:
-    for r in res:
-        image_file: Path = cfg.image_path / r[FIELD_IMAGE_NAME]
+def search_response_adapter(res: list[Image]) -> None:
+    for image in res:
+        image_file: Path = cfg.image_path / image.name
         if image_file.exists():
             st.image(
                 image_file.as_posix(),
-                caption=r[FIELD_IMAGE_NAME],
+                caption=image.name,
                 use_column_width=True,
             )
-            st.markdown(r[FIELD_IMAGE_DESCRIPTION])
-            if "_distance" in r:
-                st.markdown(f"Distance: {r['_distance']}")
+            st.markdown(image.description)
+            if image.distance is not None:
+                st.markdown(f"Distance: {image.distance}")
 
 
-def streamlit_image_search(file: UploadedFile) -> list[dict]:
+def streamlit_image_search(file: UploadedFile) -> list[Image]:
     with get_temp_file(file.getbuffer(), delete=False) as tmp:
         return image_search(tmp, LIMIT)
 
@@ -48,7 +45,7 @@ st.header("Image Vector Search")
 nav(Page.HOME)
 
 st.markdown(
-    """This form allows you to search foro images based on an **uploaded image** or some **descriptive text**. You can also combine text and images to search the image you are looking for."""
+    """This form allows you to search for images based on an **uploaded image** or some **descriptive text**. You can also combine text and images to search the image you are looking for."""
 )
 
 with st.form(key="file_search_form"):
@@ -68,7 +65,7 @@ if submit_button:
             if uploaded_file and search_expression and len(search_expression) > 1:
                 # Mixed search
                 res_image = streamlit_image_search(uploaded_file)
-                res_text = asyncio.run(text_search(search_expression, LIMIT))
+                res_text = aio.run(text_search(search_expression, LIMIT))
                 search_response_adapter(combine_results(res_image, res_text, LIMIT // 2))
             elif uploaded_file:
                 # File based search
@@ -76,7 +73,7 @@ if submit_button:
                 search_response_adapter(res)
             elif search_expression:
                 # Text only search
-                res = asyncio.run(text_search(search_expression, LIMIT))
+                res = aio.run(text_search(search_expression, LIMIT))
                 search_response_adapter(res)
     else:
         # Display a message prompting the user to fill out at least one field
