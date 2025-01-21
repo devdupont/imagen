@@ -7,18 +7,18 @@ from PIL import Image as PILImage
 
 from imagen.config import cfg
 from imagen.log import logger
-from imagen.model.error import Error, ErrorCode
 from imagen.model.image import Image
-from imagen.service.image_embeddings.embedding_query import get_image_emb
+from imagen.service.image.embedding import image_embeddings as _image_embeddings
 from imagen.service.llava_client import describe
-from imagen.service.text_embedding_service import create_text_embeddings
+from imagen.service.text import text_embeddings
 
 
-async def create_image_embeddings(images_path: Path, glob_expression: str = "*.png") -> AsyncIterator[Image]:
+async def image_embeddings(images_path: Path, glob_expression: str = "*.png") -> AsyncIterator[Image]:
     if not images_path.exists():
         return
     for im in images_path.glob(glob_expression):
-        yield await convert_single_image(im)
+        if image := await convert_single_image(im):
+            yield image
 
 
 async def convert_single_image(im: Path) -> Image | None:
@@ -27,17 +27,14 @@ async def convert_single_image(im: Path) -> Image | None:
 
     new_image_path = copy_image_to_images_folder(im)
     if not new_image_path.exists():
-        return Error(
-            code=ErrorCode.NOT_FOUND,
-            message=f"Could not find new image path: {im}",
-        )
+        raise FileNotFoundError(im)
 
     description = await describe(new_image_path)
     logger.info(f"description: {description}\n")
 
-    if description is not None and type(description) is not Error:
-        image_embedding = get_image_emb(im)
-        embedding = await create_text_embeddings(description)
+    if description:
+        image_embedding = _image_embeddings(im)
+        embedding = await text_embeddings(description)
         return Image(new_image_path.name, description, image_embedding, embedding, new_image_path)
     return None
 
@@ -76,7 +73,7 @@ if __name__ == "__main__":
     from imagen.config import cfg
 
     async def test_convert() -> None:
-        async for image in create_image_embeddings(cfg.image_load_path):
+        async for image in image_embeddings(cfg.image_load_path):
             res = image.to_pyarrow()
             print(type(res))
             break

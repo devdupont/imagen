@@ -6,7 +6,6 @@ import streamlit as st
 from imagen.app.navbar import Page, nav
 from imagen.config import cfg
 from imagen.log import logger
-from imagen.model.error import Error
 from imagen.utils.file_utils import get_temp_file
 from imagen.utils.time_utils import generate_file_timestamp
 from imagen.vdb.lancedb_persistence import save_image_from_path
@@ -40,7 +39,7 @@ if submit_button:
                 logger.info("file_copy exists %s", file_copy.exists())
                 output = asyncio.run(save_image_from_path(file_copy))
 
-            if type(output) == Error:
-                st.error(f"Image upload failed due to {output.message}")
-            else:
+                # if type(output) == Error:
+                #     st.error(f"Image upload failed due to {output.message}")
+                # else:
                 st.info(f"Image {uploaded_file.name} successfully {'created' if output else 'updated'}")

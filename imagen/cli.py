@@ -24,11 +24,11 @@ def init(
     ] = cfg.image_load_path,
 ) -> None:
     """Initialize the database."""
-    from imagen.service.conversion_service import create_image_embeddings
+    from imagen.service.conversion_service import image_embeddings
     from imagen.vdb.lancedb_persistence import TBL, save_image
 
     async def load_images() -> None:
-        async for image_data in create_image_embeddings(path):
+        async for image_data in image_embeddings(path):
             if image_data is None:
                 logger.error("Could not process any images")
                 return

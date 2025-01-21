@@ -1,10 +1,10 @@
 from imagen.model.image import Image
-from imagen.service.conversion_service import create_text_embeddings
+from imagen.service.text import text_embeddings
 from imagen.vdb.lancedb_persistence import DISTANCE, execute_knn_search
 
 
 async def text_search(image_description: str, limit: int = 10, distance: str = DISTANCE.EUCLIDEAN) -> list[Image]:
-    embedding = await create_text_embeddings(image_description)
+    embedding = await text_embeddings(image_description)
     return execute_knn_search(embedding, Image.field.text_vector, limit, distance)
 
 

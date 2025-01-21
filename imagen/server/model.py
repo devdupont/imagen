@@ -4,7 +4,6 @@ from typing import Self
 
 from pydantic import BaseModel, Field
 
-from imagen.model.error import Error
 from imagen.model.image import Image
 
 
@@ -44,4 +43,4 @@ class UploadResponse(BaseModel):
 
     name: str = Field(..., description="The image name")
     path: str = Field(..., description="The image file path")
-    output: bool | Error = Field(..., description="Upload status")
+    output: bool = Field(..., description="Upload status")

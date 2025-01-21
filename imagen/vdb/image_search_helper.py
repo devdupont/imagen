@@ -1,12 +1,12 @@
 from pathlib import Path
 
 from imagen.model.image import Image
-from imagen.service.image_embeddings.embedding_query import get_image_emb
+from imagen.service.image.embedding import image_embeddings
 from imagen.vdb.lancedb_persistence import DISTANCE, execute_knn_search
 
 
 def image_search(image_path: Path, limit: int = 10, distance: str = DISTANCE.EUCLIDEAN) -> list[Image]:
-    embedding = get_image_emb(image_path)
+    embedding = image_embeddings(image_path)
     return execute_knn_search(embedding, Image.field.image_vector, limit, distance)
 
 

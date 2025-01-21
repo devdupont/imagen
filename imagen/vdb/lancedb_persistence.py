@@ -5,7 +5,6 @@ import lancedb  # type: ignore
 
 from imagen.config import cfg
 from imagen.log import logger
-from imagen.model.error import Error, ErrorCode
 from imagen.model.image import Image
 from imagen.service.conversion_service import (
     convert_single_image,
@@ -79,16 +78,12 @@ def save_image(image: Image, *, ignore_update: bool = False) -> bool:
     return False
 
 
-async def save_image_from_path(image_path: Path) -> bool | Error:
+async def save_image_from_path(image_path: Path) -> bool:
     if not image_path.exists():
-        return Error(
-            code=ErrorCode.NOT_FOUND,
-            message=f"Could not find original image path: {image_path}",
-        )
+        msg = f"Could not find original image path: {image_path}"
+        raise FileNotFoundError(msg)
     image_data = await convert_single_image(image_path)
     if image_data is None:
-        return Error(
-            ErrorCode.DESCRIPTION_MISSING,
-            f"Image description is missing for {image_path}",
-        )
+        msg = f"Image description is missing for {image_path}"
+        raise ValueError(msg)
     return save_image(image_data)

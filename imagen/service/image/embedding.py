@@ -1,7 +1,7 @@
 import io
 from pathlib import Path
 
-import clip
+import clip  # type: ignore
 import numpy as np
 import torch
 from PIL import Image
@@ -11,7 +11,7 @@ from imagen.log import logger
 model, preprocess = clip.load("ViT-L/14", device="cpu", jit=True)
 
 
-def img_to_stream(path: Path):
+def img_to_stream(path: Path) -> io.BytesIO:
     if not path.exists():
         msg = f"Path {path} does not exist"
         raise FileNotFoundError(msg)
@@ -19,10 +19,10 @@ def img_to_stream(path: Path):
 
 
 def convert_to_list(array: np.ndarray) -> list[float]:
-    return array.cpu().detach().numpy().astype("float32")[0].tolist()
+    return array.cpu().detach().numpy().astype("float32")[0].tolist()  # type: ignore
 
 
-def get_image_emb(path: Path) -> list[float]:
+def image_embeddings(path: Path) -> list[float]:
     """
     Generates an embedding for an image at a specified path.
 
@@ -46,7 +46,7 @@ def get_image_emb(path: Path) -> list[float]:
         return convert_to_list(image_emb)
 
 
-def get_text_emb(text: str) -> np.ndarray:
+def text_embeddings(text: str) -> list[float]:
     with torch.no_grad():
         text_emb = model.encode_text(clip.tokenize([text], truncate=True).to("cpu"))
         text_emb /= text_emb.norm(dim=-1, keepdim=True)
@@ -65,8 +65,8 @@ if __name__ == "__main__":
 
     first_image = next(iter(images_path.glob("*.png")))
     logger.info(f"Processing: {first_image}")
-    img_embedding = get_image_emb(first_image)
+    img_embedding = image_embeddings(first_image)
     logger.info(f"img_embedding final shape: {len(img_embedding)}")
     logger.info(f"Embedding type: {type(img_embedding)}")
-    text_embedding = get_text_emb("Image of transformer having a conversation with a human seated on a chair.")
+    text_embedding = text_embeddings("Image of transformer having a conversation with a human seated on a chair.")
     logger.info(f"text_embedding final shape: {len(text_embedding)}")
