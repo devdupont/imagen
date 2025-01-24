@@ -44,10 +44,10 @@ class ImageFields:
 FIELD = ImageFields()
 SCHEMA = pa.schema(
     [
-        pa.field(FIELD.image_vector, pa.list_(pa.float32(), cfg.image_vector_size)),
-        pa.field(FIELD.text_vector, pa.list_(pa.float32(), cfg.text_vector_size)),
         pa.field(FIELD.name, pa.string()),
         pa.field(FIELD.description, pa.string()),
+        pa.field(FIELD.image_vector, pa.list_(pa.float32(), cfg.image_vector_size)),
+        pa.field(FIELD.text_vector, pa.list_(pa.float32(), cfg.text_vector_size)),
         pa.field(FIELD.created, pa.timestamp("ms")),
         pa.field(FIELD.updated, pa.timestamp("ms")),
     ]
@@ -87,10 +87,10 @@ class Image:
         """Convert the image object to a pyarrow table."""
         current_timestamp = int(dt.datetime.now(dt.UTC).timestamp() * 1_000)
         elements = [
-            pa.array([self.image_embedding], pa.list_(pa.float32(), cfg.image_vector_size)),
-            pa.array([self.text_embedding], pa.list_(pa.float32(), cfg.text_vector_size)),
             pa.array([self.name]),
             pa.array([self.description]),
+            pa.array([self.image_embedding], pa.list_(pa.float32(), cfg.image_vector_size)),
+            pa.array([self.text_embedding], pa.list_(pa.float32(), cfg.text_vector_size)),
         ]
 
         if create_timestamp:
