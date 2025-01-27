@@ -1,3 +1,7 @@
+"""Streamlit app custom navigation bar."""
+
+# This nav menu gives us more control compared to the default file-based menu
+
 from enum import StrEnum
 
 import streamlit as st

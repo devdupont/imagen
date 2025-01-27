@@ -32,7 +32,7 @@ class Config(BaseSettings):
 
     openai_api_key: str = ""
     openai_embeddings_model: str | None = None
-    openai_image_model: str = "clip-vit-base"
+    # openai_image_model: str = "clip-vit-base"
 
     ollama_base_url: HttpUrl = "http://localhost:11434/api"  # type: ignore
     llava_model: str = "llava"

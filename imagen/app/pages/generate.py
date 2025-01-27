@@ -3,7 +3,7 @@ import asyncio
 import streamlit as st
 
 from imagen.app.navbar import Page, nav
-from imagen.app.pages.common import display_image, missing_prompt_error, save_image
+from imagen.app.util import display_image, missing_prompt_error, save_image
 from imagen.service.image.generate import Sizes, generate_image
 
 st.set_page_config(layout="wide")

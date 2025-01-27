@@ -17,7 +17,7 @@ def display_image(image: Path, prompt: str) -> None:
     st.image(
         image.as_posix(),
         caption=prompt,
-        use_column_width=True,
+        use_container_width=True,
     )
 
 

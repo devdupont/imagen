@@ -49,7 +49,7 @@ start = "uvicorn imagen.server.main:app --port {args:8888}"
 reload = "uvicorn imagen.server.main:app --reload --port {args:8888}"
 
 [tool.hatch.envs.app.scripts]
-start = "streamlit run imagen/app/home.py"
+start = "streamlit run imagen/app/home.py --client.showSidebarNavigation False"
 
 [tool.hatch.envs.hatch-test]
 extra-dependencies = [

@@ -26,7 +26,7 @@ def search_response_adapter(res: list[Image]) -> None:
             st.image(
                 image_file.as_posix(),
                 caption=image.name,
-                use_column_width=True,
+                use_container_width=True,
             )
             st.markdown(image.description)
             if image.distance is not None:

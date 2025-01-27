@@ -17,7 +17,7 @@ class Sizes(StrEnum):
 
 async def generate_image(prompt: str, number_of_images: int = 1, size: Sizes = Sizes.SQUARE) -> list[Path]:
     response = await client.images.generate(
-        model=cfg.openai_image_model,
+        # model=cfg.openai_image_model,
         prompt=prompt,
         n=number_of_images,  # Number of images to generate
         size=size.value,  # Size of the generated image,
